@@ -21,7 +21,7 @@
 
 <div class="wrapper">
 
-
+    <!-- Sidebar -->
     <div class="sidebar">
 
         <h2 class="logo">TaskFlow</h2>
@@ -53,6 +53,7 @@
 
     </div>
 
+    <!-- Main Content -->
     <div class="main-content">
 
         <!-- Topbar -->
@@ -60,7 +61,6 @@
 
             <div>
                 <h2>Employee Dashboard</h2>
-                
             </div>
 
             <div class="admin-profile">
@@ -70,9 +70,10 @@
 
         </div>
 
+        <!-- Dashboard Cards -->
         <div class="row mt-4 g-4">
 
-            <!-- Total -->
+            <!-- Total Tasks -->
             <div class="col-md-4">
 
                 <div class="dashboard-card bg-primary">
@@ -87,6 +88,7 @@
 
             </div>
 
+            <!-- Completed Tasks -->
             <div class="col-md-4">
 
                 <div class="dashboard-card bg-success">
@@ -101,6 +103,7 @@
 
             </div>
 
+            <!-- Pending Tasks -->
             <div class="col-md-4">
 
                 <div class="dashboard-card bg-warning">
@@ -117,7 +120,7 @@
 
         </div>
 
-
+        <!-- Tasks Section -->
         <div class="row mt-5" id="tasks-section">
 
             {% if tasks %}
@@ -128,11 +131,12 @@
 
                     <div class="task-card">
 
+                        <!-- Task Header -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
 
-                            <h4>{{ task[1] }}</h4>
+                            <h4>{{ task['title'] }}</h4>
 
-                            {% if task[3] == 'Completed' %}
+                            {% if task['status'] == 'Completed' %}
 
                                 <span class="badge bg-success">
                                     Completed
@@ -148,22 +152,25 @@
 
                         </div>
 
+                        <!-- Task Description -->
                         <p class="task-desc">
-                            {{ task[2] }}
+                            {{ task['description'] }}
                         </p>
 
+                        <!-- Project -->
                         <div class="mt-3">
 
                             <h6>
                                 <i class="fa fa-folder"></i>
-                                Project: {{ task[4] }}
+                                Project: {{ task['project_title'] }}
                             </h6>
 
                         </div>
 
-                        {% if task[3] != 'Completed' %}
+                        <!-- Button -->
+                        {% if task['status'] != 'Completed' %}
 
-                        <a href="/update_status/{{ task[0] }}"
+                        <a href="/update_status/{{ task['id'] }}"
                            class="btn btn-success w-100 mt-3">
 
                             <i class="fa fa-check"></i>
@@ -190,6 +197,7 @@
 
             {% else %}
 
+            <!-- No Tasks -->
             <div class="col-12">
 
                 <div class="alert alert-info text-center">
