@@ -9,13 +9,11 @@ body{
     background:#f1f5f9;
 }
 
-/* Layout */
 .wrapper{
     display:flex;
     min-height:100vh;
 }
 
-/* Sidebar */
 .sidebar{
     width:260px;
     background:#0f172a;
@@ -34,7 +32,6 @@ body{
     text-align:center;
 }
 
-/* Sidebar Menu */
 .sidebar ul{
     list-style:none;
     padding:0;
@@ -68,14 +65,12 @@ body{
     background:#b91c1c !important;
 }
 
-/* Main Content */
 .main-content{
     margin-left:260px;
     width:100%;
     padding:30px;
 }
 
-/* Topbar */
 .topbar{
     background:white;
     padding:22px 30px;
@@ -102,7 +97,6 @@ body{
     margin-right:10px;
 }
 
-/* Dashboard Cards */
 .dashboard-card{
     height:190px;
     border-radius:20px;
@@ -134,7 +128,6 @@ body{
     font-size:22px;
 }
 
-/* Buttons */
 .btn{
     border-radius:12px;
     padding:12px 22px;
@@ -142,7 +135,6 @@ body{
     font-weight:600;
 }
 
-/* Table Container */
 .table-container{
     background:white;
     margin-top:30px;
@@ -157,7 +149,6 @@ body{
     color:#0f172a;
 }
 
-/* Table */
 .table{
     width:100%;
     border-collapse:collapse;
@@ -185,14 +176,12 @@ body{
     background:#f8fafc;
 }
 
-/* Badge */
 .badge{
     padding:8px 14px;
     border-radius:10px;
     font-size:14px;
 }
 
-/* Task Cards */
 .task-card{
     background:white;
     padding:25px;
@@ -216,7 +205,6 @@ body{
     margin-bottom:15px;
 }
 
-/* Mobile Responsive */
 @media(max-width:992px){
 
     .sidebar{

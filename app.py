@@ -7,14 +7,13 @@ app = Flask(__name__)
 app.secret_key = 'secret123'
 
 
-# ================= DATABASE CONNECTION =================
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
-# ================= CREATE TABLES =================
+
 def create_tables():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -56,13 +55,12 @@ def create_tables():
 create_tables()
 
 
-# ================= HOME =================
 @app.route('/')
 def home():
     return render_template('login.html')
 
 
-# ================= REGISTER =================
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 
@@ -97,7 +95,7 @@ def register():
     return render_template('register.html')
 
 
-# ================= LOGIN =================
+
 @app.route('/login', methods=['POST'])
 def login():
 
@@ -129,7 +127,7 @@ def login():
     return redirect('/')
 
 
-# ================= ADMIN DASHBOARD =================
+
 @app.route('/admin_dashboard')
 def admin_dashboard():
 
@@ -164,7 +162,6 @@ def admin_dashboard():
     )
 
 
-# ================= EMPLOYEE DASHBOARD =================
 @app.route('/dashboard')
 def dashboard():
 
@@ -212,7 +209,6 @@ def dashboard():
     )
 
 
-# ================= CREATE PROJECT =================
 @app.route('/create_project', methods=['GET', 'POST'])
 def create_project():
 
@@ -241,7 +237,6 @@ def create_project():
     return render_template('create_project.html')
 
 
-# ================= CREATE TASK =================
 @app.route('/create_task', methods=['GET', 'POST'])
 def create_task():
 
@@ -282,7 +277,6 @@ def create_task():
     )
 
 
-# ================= UPDATE TASK STATUS =================
 @app.route('/update_status/<int:id>')
 def update_status(id):
 
@@ -305,7 +299,7 @@ def update_status(id):
     return redirect('/dashboard')
 
 
-# ================= LOGOUT =================
+
 @app.route('/logout')
 def logout():
 
