@@ -174,13 +174,15 @@ def dashboard():
     cur = conn.cursor()
 
     cur.execute("""
-    SELECT tasks.id,
+    SELECT 
+           tasks.id,
            tasks.title,
            tasks.description,
            tasks.status,
-           projects.title
+           projects.title AS project_title
     FROM tasks
-    JOIN projects ON tasks.project_id = projects.id
+    JOIN projects 
+    ON tasks.project_id = projects.id
     WHERE tasks.assigned_to = ?
     """, (user_id,))
 
@@ -207,7 +209,6 @@ def dashboard():
         completed_tasks=completed_tasks,
         pending_tasks=pending_tasks
     )
-
 
 @app.route('/create_project', methods=['GET', 'POST'])
 def create_project():
