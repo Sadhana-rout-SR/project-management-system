@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <h2 class="logo">TaskFlow</h2>
+
+        <ul>
+
+            <li>
+                <a href="#">
+                    <i class="fa fa-chart-line"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/create_project">
+                    <i class="fa fa-folder"></i>
+                    Projects
+                </a>
+            </li>
+
+            <li>
+                <a href="/create_task">
+                    <i class="fa fa-tasks"></i>
+                    Tasks
+                </a>
+            </li>
+
+            <li>
+                <a href="/logout" class="logout-btn">
+                    <i class="fa fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Topbar -->
+        <div class="topbar">
+
+            <div>
+                <h2>Admin Dashboard</h2>
+            
+            </div>
+
+            <div class="admin-profile">
+                <i class="fa fa-user-circle"></i>
+                Admin
+            </div>
+
+        </div>
+
+        <!-- Dashboard Cards -->
+        <div class="row g-4 mt-2">
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="dashboard-card bg-primary">
+
+                    <i class="fa fa-folder"></i>
+
+                    <h3>{{ projects|length }}</h3>
+
+                    <p>Total Projects</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="dashboard-card bg-success">
+
+                    <i class="fa fa-list-check"></i>
+
+                    <h3>{{ tasks|length }}</h3>
+
+                    <p>Total Tasks</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 col-md-12">
+
+                <div class="dashboard-card bg-warning">
+
+                    <i class="fa fa-users"></i>
+
+                    <h3>Team</h3>
+
+                    <p>Employees</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex gap-3 flex-wrap mt-4">
+
+            <a href="/create_project"
+                class="btn btn-primary">
+
+                <i class="fa fa-plus"></i>
+                Create Project
+
+            </a>
+
+            <a href="/create_task"
+                class="btn btn-success">
+
+                <i class="fa fa-plus"></i>
+                Create Task
+
+            </a>
+
+        </div>
+
+        <!-- Projects Table -->
+        <div class="table-container">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h4 class="mb-0">Projects</h4>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table align-middle table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Project Title</th>
+
+                            <th>Description</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for project in projects %}
+
+                        <tr>
+
+                            <td>{{ project[0] }}</td>
+
+                            <td>{{ project[1] }}</td>
+
+                            <td>{{ project[2] }}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- Tasks Table -->
+        <div class="table-container">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h4 class="mb-0">Tasks</h4>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table align-middle table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Task</th>
+
+                            <th>Status</th>
+
+                            <th>User</th>
+
+                            <th>Project</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for task in tasks %}
+
+                        <tr>
+
+                            <td>{{ task[0] }}</td>
+
+                            <td>{{ task[1] }}</td>
+
+                            <td>
+
+                                {% if task[2] == 'Completed' %}
+
+                                <span class="badge bg-success">
+
+                                    Completed
+
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Pending
+
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>{{ task[3] }}</td>
+
+                            <td>{{ task[4] }}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
