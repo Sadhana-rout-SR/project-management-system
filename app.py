@@ -7,19 +7,21 @@ app = Flask(__name__)
 app.secret_key = 'secret123'
 
 
+# DATABASE CONNECTION
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
-
+# CREATE TABLES
 def create_tables():
+
     conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT UNIQUE,
@@ -29,7 +31,7 @@ def create_tables():
     """)
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS projects (
+    CREATE TABLE IF NOT EXISTS projects(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT,
         description TEXT,
@@ -38,7 +40,7 @@ def create_tables():
     """)
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS tasks (
+    CREATE TABLE IF NOT EXISTS tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT,
         description TEXT,
@@ -55,12 +57,13 @@ def create_tables():
 create_tables()
 
 
+# HOME
 @app.route('/')
 def home():
     return render_template('login.html')
 
 
-
+# REGISTER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 
@@ -74,7 +77,11 @@ def register():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM users WHERE email=?", (email,))
+        cur.execute(
+            "SELECT * FROM users WHERE email=?",
+            (email,)
+        )
+
         existing_user = cur.fetchone()
 
         if existing_user:
@@ -95,7 +102,7 @@ def register():
     return render_template('register.html')
 
 
-
+# LOGIN
 @app.route('/login', methods=['POST'])
 def login():
 
@@ -105,7 +112,11 @@ def login():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users WHERE email=?", (email,))
+    cur.execute(
+        "SELECT * FROM users WHERE email=?",
+        (email,)
+    )
+
     user = cur.fetchone()
 
     conn.close()
@@ -120,6 +131,7 @@ def login():
 
             if user['role'] == 'admin':
                 return redirect('/admin_dashboard')
+
             else:
                 return redirect('/dashboard')
 
@@ -127,11 +139,14 @@ def login():
     return redirect('/')
 
 
-
+# ADMIN DASHBOARD
 @app.route('/admin_dashboard')
 def admin_dashboard():
 
-    if 'role' not in session or session['role'] != 'admin':
+    if 'role' not in session:
+        return redirect('/')
+
+    if session['role'] != 'admin':
         return redirect('/')
 
     conn = get_db_connection()
@@ -141,14 +156,20 @@ def admin_dashboard():
     projects = cur.fetchall()
 
     cur.execute("""
-    SELECT tasks.id,
-           tasks.title,
-           tasks.status,
-           users.name,
-           projects.title
+    SELECT
+        tasks.id,
+        tasks.title,
+        tasks.status,
+        users.name AS employee_name,
+        projects.title AS project_title
+
     FROM tasks
-    JOIN users ON tasks.assigned_to = users.id
-    JOIN projects ON tasks.project_id = projects.id
+
+    JOIN users
+    ON tasks.assigned_to = users.id
+
+    JOIN projects
+    ON tasks.project_id = projects.id
     """)
 
     tasks = cur.fetchall()
@@ -162,6 +183,7 @@ def admin_dashboard():
     )
 
 
+# EMPLOYEE DASHBOARD
 @app.route('/dashboard')
 def dashboard():
 
@@ -174,15 +196,18 @@ def dashboard():
     cur = conn.cursor()
 
     cur.execute("""
-    SELECT 
-           tasks.id,
-           tasks.title,
-           tasks.description,
-           tasks.status,
-           projects.title AS project_title
+    SELECT
+        tasks.id,
+        tasks.title,
+        tasks.description,
+        tasks.status,
+        projects.title AS project_title
+
     FROM tasks
-    JOIN projects 
+
+    JOIN projects
     ON tasks.project_id = projects.id
+
     WHERE tasks.assigned_to = ?
     """, (user_id,))
 
@@ -199,6 +224,7 @@ def dashboard():
 
         if task['status'] == 'Completed':
             completed_tasks += 1
+
         else:
             pending_tasks += 1
 
@@ -210,10 +236,15 @@ def dashboard():
         pending_tasks=pending_tasks
     )
 
+
+# CREATE PROJECT
 @app.route('/create_project', methods=['GET', 'POST'])
 def create_project():
 
-    if 'role' not in session or session['role'] != 'admin':
+    if 'role' not in session:
+        return redirect('/')
+
+    if session['role'] != 'admin':
         return redirect('/')
 
     if request.method == 'POST':
@@ -225,32 +256,45 @@ def create_project():
         cur = conn.cursor()
 
         cur.execute("""
-        INSERT INTO projects(title, description, created_by)
+        INSERT INTO projects(title,description,created_by)
         VALUES(?,?,?)
-        """, (title, description, session['user_id']))
+        """, (
+            title,
+            description,
+            session['user_id']
+        ))
 
         conn.commit()
         conn.close()
 
         flash("Project Created")
+
         return redirect('/admin_dashboard')
 
     return render_template('create_project.html')
 
 
+# CREATE TASK
 @app.route('/create_task', methods=['GET', 'POST'])
 def create_task():
 
-    if 'role' not in session or session['role'] != 'admin':
+    if 'role' not in session:
+        return redirect('/')
+
+    if session['role'] != 'admin':
         return redirect('/')
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users WHERE role='employee'")
+    cur.execute(
+        "SELECT * FROM users WHERE role='employee'"
+    )
+
     users = cur.fetchall()
 
     cur.execute("SELECT * FROM projects")
+
     projects = cur.fetchall()
 
     if request.method == 'POST':
@@ -261,14 +305,27 @@ def create_task():
         project_id = request.form['project_id']
 
         cur.execute("""
-        INSERT INTO tasks(title, description, status, assigned_to, project_id)
+        INSERT INTO tasks(
+            title,
+            description,
+            status,
+            assigned_to,
+            project_id
+        )
         VALUES(?,?,?,?,?)
-        """, (title, description, 'Pending', assigned_to, project_id))
+        """, (
+            title,
+            description,
+            'Pending',
+            assigned_to,
+            project_id
+        ))
 
         conn.commit()
         conn.close()
 
         flash("Task Created")
+
         return redirect('/admin_dashboard')
 
     return render_template(
@@ -278,6 +335,7 @@ def create_task():
     )
 
 
+# UPDATE TASK STATUS
 @app.route('/update_status/<int:id>')
 def update_status(id):
 
@@ -297,10 +355,11 @@ def update_status(id):
     conn.close()
 
     flash("Task Completed")
+
     return redirect('/dashboard')
 
 
-
+# LOGOUT
 @app.route('/logout')
 def logout():
 
