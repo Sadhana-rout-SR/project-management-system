@@ -4,7 +4,6 @@ from werkzeug.security import generate_password_hash
 conn = sqlite3.connect('database.db')
 cur = conn.cursor()
 
-# ADMIN
 cur.execute("""
 INSERT INTO users(name,email,password,role)
 VALUES(?,?,?,?)
@@ -15,7 +14,6 @@ VALUES(?,?,?,?)
     'admin'
 ))
 
-# EMPLOYEE
 cur.execute("""
 INSERT INTO users(name,email,password,role)
 VALUES(?,?,?,?)
@@ -26,7 +24,6 @@ VALUES(?,?,?,?)
     'employee'
 ))
 
-# PROJECT
 cur.execute("""
 INSERT INTO projects(title,description,created_by)
 VALUES(?,?,?)
@@ -36,7 +33,6 @@ VALUES(?,?,?)
     1
 ))
 
-# TASK
 cur.execute("""
 INSERT INTO tasks(title,description,status,assigned_to,project_id)
 VALUES(?,?,?,?,?)
