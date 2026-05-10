@@ -1,18 +1,60 @@
 from flask import Flask, render_template, request, redirect, session, flash
-from flask_mysqldb import MySQL
+import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
 app.secret_key = 'secret123'
 
-# MYSQL CONFIG
-app.config['MYSQL_HOST'] = 'containers-us-west-xx.railway.app'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'abcd123'
-app.config['MYSQL_DB'] = 'railway'
 
-mysql = MySQL(app)
+# ================= DATABASE CONNECTION =================
+def get_db_connection():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+# ================= CREATE TABLES =================
+def create_tables():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        description TEXT,
+        created_by INTEGER
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        description TEXT,
+        status TEXT,
+        assigned_to INTEGER,
+        project_id INTEGER
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+create_tables()
+
 
 # ================= HOME =================
 @app.route('/')
@@ -31,10 +73,10 @@ def register():
         password = generate_password_hash(request.form['password'])
         role = request.form['role']
 
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        # CHECK DUPLICATE EMAIL
-        cur.execute("SELECT * FROM users WHERE email=%s", [email])
+        cur.execute("SELECT * FROM users WHERE email=?", (email,))
         existing_user = cur.fetchone()
 
         if existing_user:
@@ -43,11 +85,11 @@ def register():
 
         cur.execute("""
         INSERT INTO users(name,email,password,role)
-        VALUES(%s,%s,%s,%s)
+        VALUES(?,?,?,?)
         """, (name, email, password, role))
 
-        mysql.connection.commit()
-        cur.close()
+        conn.commit()
+        conn.close()
 
         flash("Registration Successful")
         return redirect('/')
@@ -62,23 +104,24 @@ def login():
     email = request.form['email']
     password = request.form['password']
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-    cur.execute("SELECT * FROM users WHERE email=%s", [email])
-
+    cur.execute("SELECT * FROM users WHERE email=?", (email,))
     user = cur.fetchone()
+
+    conn.close()
 
     if user:
 
-        if check_password_hash(user[3], password):
+        if check_password_hash(user['password'], password):
 
-            session['user_id'] = user[0]
-            session['name'] = user[1]
-            session['role'] = user[4]
+            session['user_id'] = user['id']
+            session['name'] = user['name']
+            session['role'] = user['role']
 
-            if user[4] == 'admin':
+            if user['role'] == 'admin':
                 return redirect('/admin_dashboard')
-
             else:
                 return redirect('/dashboard')
 
@@ -93,13 +136,12 @@ def admin_dashboard():
     if 'role' not in session or session['role'] != 'admin':
         return redirect('/')
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-    # PROJECTS
     cur.execute("SELECT * FROM projects")
     projects = cur.fetchall()
 
-    # TASKS
     cur.execute("""
     SELECT tasks.id,
            tasks.title,
@@ -112,6 +154,8 @@ def admin_dashboard():
     """)
 
     tasks = cur.fetchall()
+
+    conn.close()
 
     return render_template(
         'admin_dashboard.html',
@@ -129,7 +173,8 @@ def dashboard():
 
     user_id = session['user_id']
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
     cur.execute("""
     SELECT tasks.id,
@@ -139,12 +184,13 @@ def dashboard():
            projects.title
     FROM tasks
     JOIN projects ON tasks.project_id = projects.id
-    WHERE tasks.assigned_to = %s
-    """, [user_id])
+    WHERE tasks.assigned_to = ?
+    """, (user_id,))
 
     tasks = cur.fetchall()
 
-    # COUNT TASKS
+    conn.close()
+
     total_tasks = len(tasks)
 
     completed_tasks = 0
@@ -152,7 +198,7 @@ def dashboard():
 
     for task in tasks:
 
-        if task[3] == 'Completed':
+        if task['status'] == 'Completed':
             completed_tasks += 1
         else:
             pending_tasks += 1
@@ -178,14 +224,16 @@ def create_project():
         title = request.form['title']
         description = request.form['description']
 
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
         cur.execute("""
         INSERT INTO projects(title, description, created_by)
-        VALUES(%s, %s, %s)
+        VALUES(?,?,?)
         """, (title, description, session['user_id']))
 
-        mysql.connection.commit()
+        conn.commit()
+        conn.close()
 
         flash("Project Created")
         return redirect('/admin_dashboard')
@@ -200,13 +248,12 @@ def create_task():
     if 'role' not in session or session['role'] != 'admin':
         return redirect('/')
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-    # ONLY EMPLOYEES
     cur.execute("SELECT * FROM users WHERE role='employee'")
     users = cur.fetchall()
 
-    # PROJECTS
     cur.execute("SELECT * FROM projects")
     projects = cur.fetchall()
 
@@ -219,10 +266,11 @@ def create_task():
 
         cur.execute("""
         INSERT INTO tasks(title, description, status, assigned_to, project_id)
-        VALUES(%s, %s, %s, %s, %s)
+        VALUES(?,?,?,?,?)
         """, (title, description, 'Pending', assigned_to, project_id))
 
-        mysql.connection.commit()
+        conn.commit()
+        conn.close()
 
         flash("Task Created")
         return redirect('/admin_dashboard')
@@ -241,16 +289,17 @@ def update_status(id):
     if 'user_id' not in session:
         return redirect('/')
 
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-    # UPDATE ONLY EMPLOYEE TASK
     cur.execute("""
     UPDATE tasks
     SET status='Completed'
-    WHERE id=%s
-    """, [id])
+    WHERE id=?
+    """, (id,))
 
-    mysql.connection.commit()
+    conn.commit()
+    conn.close()
 
     flash("Task Completed")
     return redirect('/dashboard')
@@ -266,4 +315,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)
